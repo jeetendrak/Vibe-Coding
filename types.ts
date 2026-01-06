@@ -1,4 +1,3 @@
-
 export type TransactionType = 'INCOME' | 'EXPENSE';
 
 export interface User {
@@ -87,4 +86,4 @@ export interface Investment {
   lastUpdated: string;
 }
 
-export type AppScreen = 'AUTH' | 'DASHBOARD' | 'TRANSACTIONS' | 'SMS_PARSER' | 'EMI' | 'BUDGETS' | 'GOALS' | 'INVESTMENTS' | 'SETTINGS' | 'GROUPS' | 'GROUP_DETAIL' | 'PROFILE';
+export type AppScreen = 'AUTH' | 'DASHBOARD' | 'TRANSACTIONS' | 'SMS_PARSER' | 'EMI' | 'BUDGETS' | 'GOALS' | 'INVESTMENTS' | 'SETTINGS' | 'GROUPS' | 'GROUP_DETAIL' | 'PROFILE' | 'ABOUT';

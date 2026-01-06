@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Home, 
@@ -12,7 +11,8 @@ import {
   CreditCard,
   PieChart,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  Info
 } from 'lucide-react';
 import { AppScreen, User, Branding } from '../types';
 
@@ -43,6 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, use
     { id: 'GOALS' as AppScreen, label: 'Savings Goals', icon: Target },
     { id: 'PROFILE' as AppScreen, label: 'My Profile', icon: UserIcon },
     { id: 'SETTINGS' as AppScreen, label: 'Settings', icon: Settings },
+    { id: 'ABOUT' as AppScreen, label: 'About', icon: Info },
   ];
 
   const handleSidebarNav = (id: AppScreen) => {
@@ -142,6 +143,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, use
       {/* Content Area */}
       <main className="flex-1 overflow-y-auto pb-32">
         {children}
+        
+        {/* Footer Message */}
+        <footer className="py-10 text-center mt-4">
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.25em]">
+            App designed by - Jeet
+          </p>
+        </footer>
       </main>
 
       {/* Bottom Navigation */}

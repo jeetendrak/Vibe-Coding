@@ -10,6 +10,7 @@ import SettingsScreen from './screens/Settings';
 import GroupsScreen from './screens/Groups';
 import GroupDetail from './screens/GroupDetail';
 import ProfileScreen from './screens/Profile';
+import AboutScreen from './screens/About';
 import { AppScreen, Group, User, Branding } from './types';
 import { loadData, saveData, getAuthUser, setAuthUser } from './store/appStore';
 
@@ -158,6 +159,11 @@ const App: React.FC = () => {
           onLogout={handleLogout} 
           onDataReset={handleFactoryReset}
           onUpdateBranding={(b) => updateData({ branding: b })}
+        />;
+      case 'ABOUT':
+        return <AboutScreen 
+          branding={data.branding} 
+          onBack={() => handleNavigate('SETTINGS')} 
         />;
       default:
         return <Dashboard data={data} onNavigate={handleNavigate} onUpdateTransactions={(t) => updateData({ transactions: t })} />;
