@@ -66,7 +66,15 @@
 </script>
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-hidden">
-    <div id="root"></div>
+    <div id="root">
+        <!-- Fallback if JS fails to load or app crashes -->
+        <div class="min-h-screen flex items-center justify-center p-6 text-center">
+            <div class="space-y-4">
+                <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p class="text-slate-400 font-medium">Loading SmartFin...</p>
+            </div>
+        </div>
+    </div>
     <script type="module" src="index.tsx"></script>
 </body>
 </html>
