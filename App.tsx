@@ -1,8 +1,5 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { onAuthStateChanged, signOut } from "firebase/auth";
-// Add missing Loader2 import from lucide-react
-import { Loader2 } from 'lucide-react';
 import Layout from './components/Layout';
 import Auth from './screens/Auth';
 import Dashboard from './screens/Dashboard';
@@ -14,39 +11,15 @@ import SettingsScreen from './screens/Settings';
 import GroupsScreen from './screens/Groups';
 import GroupDetail from './screens/GroupDetail';
 import ProfileScreen from './screens/Profile';
-import { AppScreen, Group, User, Branding, Transaction } from './types';
-import { loadData, saveData, setAuthUser } from './store/appStore';
-import { auth } from './services/firebaseService';
+import { AppScreen, Group, User, Branding } from './types';
+import { loadData, saveData, getAuthUser, setAuthUser } from './store/appStore';
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [user, setUser] = useState<User | null>(getAuthUser());
   const [activeScreen, setActiveScreen] = useState<AppScreen>('DASHBOARD');
   const [data, setData] = useState(loadData());
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [pendingJoinCode, setPendingJoinCode] = useState<string | null>(null);
-
-  // Monitor Firebase Auth state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        const userData: User = {
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-          email: firebaseUser.email || '',
-          avatar: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.email}`
-        };
-        setUser(userData);
-        setAuthUser(userData);
-      } else {
-        setUser(null);
-        setAuthUser(null);
-      }
-      setIsInitializing(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   // Deep-link logic for group invites
   useEffect(() => {
@@ -73,13 +46,10 @@ const App: React.FC = () => {
           updateData({ groups: newGroups });
           setSelectedGroup(updatedGroup);
           setActiveScreen('GROUP_DETAIL');
-          alert(`Successfully joined ${groupToJoin.name}!`);
         } else {
           setSelectedGroup(groupToJoin);
           setActiveScreen('GROUP_DETAIL');
         }
-      } else if (pendingJoinCode.startsWith('SMART-')) {
-        alert("Invite code not found. It may have expired.");
       }
       setPendingJoinCode(null);
     }
@@ -102,15 +72,10 @@ const App: React.FC = () => {
     setActiveScreen('DASHBOARD');
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      setAuthUser(null);
-      setActiveScreen('AUTH');
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
+  const handleLogout = () => {
+    setUser(null);
+    setAuthUser(null);
+    setActiveScreen('AUTH');
   };
 
   const updateData = (newData: Partial<typeof data>) => {
@@ -123,23 +88,11 @@ const App: React.FC = () => {
   };
 
   const handleFactoryReset = () => {
-    if (window.confirm("WARNING: This will permanently delete ALL data, groups, and account settings. This cannot be undone. Proceed?")) {
+    if (window.confirm("WARNING: This will permanently delete ALL data. Proceed?")) {
       localStorage.clear();
-      signOut(auth).finally(() => {
-        window.location.href = window.location.origin + window.location.pathname;
-      });
+      window.location.reload();
     }
   };
-
-  // Fixed: Added import for Loader2 above
-  if (isInitializing) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="animate-spin text-indigo-600" size={40} />
-        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Initializing SmartFin...</p>
-      </div>
-    );
-  }
 
   if (!user) {
     return <Auth onLogin={handleLogin} branding={data.branding} />;
@@ -208,11 +161,7 @@ const App: React.FC = () => {
           onUpdateBranding={(b) => updateData({ branding: b })}
         />;
       default:
-        return <Dashboard 
-          data={data} 
-          onNavigate={handleNavigate} 
-          onUpdateTransactions={(t) => updateData({ transactions: t })}
-        />;
+        return <Dashboard data={data} onNavigate={handleNavigate} onUpdateTransactions={(t) => updateData({ transactions: t })} />;
     }
   };
 
