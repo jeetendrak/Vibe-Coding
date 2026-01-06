@@ -1,8 +1,8 @@
 
 import { Transaction, EMI, Budget, Goal, Investment, Group, User, Branding } from '../types';
 
-const STORAGE_KEY = 'SMARTFIN_DATA_V1';
-const AUTH_KEY = 'SMARTFIN_AUTH_V1';
+const STORAGE_KEY = 'SMARTFIN_DATA_V2';
+const AUTH_KEY = 'SMARTFIN_AUTH_V2';
 
 interface AppData {
   transactions: Transaction[];
@@ -35,13 +35,7 @@ export const loadData = (): AppData => {
     return {
       ...DEFAULT_DATA,
       ...parsed,
-      branding: parsed.branding || DEFAULT_DATA.branding,
-      transactions: parsed.transactions || [],
-      emis: parsed.emis || [],
-      budgets: parsed.budgets || [],
-      goals: parsed.goals || [],
-      investments: parsed.investments || [],
-      groups: parsed.groups || []
+      branding: parsed.branding || DEFAULT_DATA.branding
     };
   } catch (e) {
     return DEFAULT_DATA;
@@ -78,17 +72,4 @@ export const exportData = () => {
   a.href = url;
   a.download = `smartfin_backup_${new Date().toISOString().split('T')[0]}.json`;
   a.click();
-};
-
-export const importData = (jsonString: string): boolean => {
-  try {
-    const parsed = JSON.parse(jsonString);
-    if (parsed.branding) { // Basic validation
-      saveData(parsed);
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
 };

@@ -21,18 +21,18 @@ const App: React.FC = () => {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [pendingJoinCode, setPendingJoinCode] = useState<string | null>(null);
 
-  // Check for Join Group Link on Mount
+  // Deep-link logic for group invites
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('joinGroup');
     if (code) {
       setPendingJoinCode(code);
-      // Clean up URL
+      // Remove params from URL without refreshing
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  // Auto-join logic if logged in
+  // Process join request once authenticated
   useEffect(() => {
     if (user && pendingJoinCode) {
       const groupToJoin = data.groups.find(g => g.inviteCode === pendingJoinCode);
@@ -52,8 +52,8 @@ const App: React.FC = () => {
           setSelectedGroup(groupToJoin);
           setActiveScreen('GROUP_DETAIL');
         }
-      } else {
-        alert("Invalid or expired group invite code.");
+      } else if (pendingJoinCode.startsWith('SMART-')) {
+        alert("Invite code not found. It may have expired.");
       }
       setPendingJoinCode(null);
     }
@@ -92,9 +92,10 @@ const App: React.FC = () => {
   };
 
   const handleFactoryReset = () => {
-    if (window.confirm("WARNING: This will permanently delete ALL data, transactions, and settings. Are you absolutely sure?")) {
+    if (window.confirm("WARNING: This will permanently delete ALL data, groups, and account settings. This cannot be undone. Proceed?")) {
       localStorage.clear();
-      window.location.href = window.location.origin + window.location.pathname; // Hard reload
+      // Force hard redirect to base URL to clear any memory states and query params
+      window.location.href = window.location.origin + window.location.pathname;
     }
   };
 
