@@ -10,6 +10,7 @@ import EMIScreen from './screens/EMI';
 import SettingsScreen from './screens/Settings';
 import GroupsScreen from './screens/Groups';
 import GroupDetail from './screens/GroupDetail';
+import ProfileScreen from './screens/Profile';
 import { AppScreen, Group, User, Branding } from './types';
 import { loadData, saveData, getAuthUser, setAuthUser } from './store/appStore';
 
@@ -18,6 +19,44 @@ const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<AppScreen>('DASHBOARD');
   const [data, setData] = useState(loadData());
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [pendingJoinCode, setPendingJoinCode] = useState<string | null>(null);
+
+  // Check for Join Group Link on Mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('joinGroup');
+    if (code) {
+      setPendingJoinCode(code);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Auto-join logic if logged in
+  useEffect(() => {
+    if (user && pendingJoinCode) {
+      const groupToJoin = data.groups.find(g => g.inviteCode === pendingJoinCode);
+      if (groupToJoin) {
+        const alreadyMember = groupToJoin.members.some(m => m.contact === user.email);
+        if (!alreadyMember) {
+          const updatedGroup = {
+            ...groupToJoin,
+            members: [...groupToJoin.members, { id: user.id, name: user.name, contact: user.email, isUser: true }]
+          };
+          updateData({ groups: data.groups.map(g => g.id === groupToJoin.id ? updatedGroup : g) });
+          setSelectedGroup(updatedGroup);
+          setActiveScreen('GROUP_DETAIL');
+          alert(`Successfully joined ${groupToJoin.name}!`);
+        } else {
+          setSelectedGroup(groupToJoin);
+          setActiveScreen('GROUP_DETAIL');
+        }
+      } else {
+        alert("Invalid or expired group invite code.");
+      }
+      setPendingJoinCode(null);
+    }
+  }, [user, pendingJoinCode, data.groups]);
 
   useEffect(() => {
     saveData(data);
@@ -39,26 +78,16 @@ const App: React.FC = () => {
   const handleLogout = () => {
     setUser(null);
     setAuthUser(null);
-    setActiveScreen('DASHBOARD');
+    setActiveScreen('AUTH');
   };
 
   const updateData = (newData: Partial<typeof data>) => {
     setData(prev => ({ ...prev, ...newData }));
   };
 
-  const handleGroupSelect = (group: Group) => {
-    setSelectedGroup(group);
-    setActiveScreen('GROUP_DETAIL');
-  };
-
-  const handleUpdateGroup = (updatedGroup: Group) => {
-    const newGroups = data.groups.map(g => g.id === updatedGroup.id ? updatedGroup : g);
-    updateData({ groups: newGroups });
-    setSelectedGroup(updatedGroup);
-  };
-
-  const handleUpdateBranding = (newBranding: Branding) => {
-    updateData({ branding: newBranding });
+  const handleUpdateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    setAuthUser(updatedUser);
   };
 
   if (!user) {
@@ -72,12 +101,12 @@ const App: React.FC = () => {
       case 'TRANSACTIONS':
         return <TransactionsScreen 
           transactions={data.transactions} 
-          onAdd={(t) => updateData({ transactions: [t, ...data.transactions] })} 
+          onUpdate={(t) => updateData({ transactions: t })} 
         />;
       case 'GROUPS':
         return <GroupsScreen 
           groups={data.groups} 
-          onSelectGroup={handleGroupSelect}
+          onSelectGroup={(g) => { setSelectedGroup(g); setActiveScreen('GROUP_DETAIL'); }}
           onCreateGroup={(g) => updateData({ groups: [g, ...data.groups] })}
         />;
       case 'GROUP_DETAIL':
@@ -85,7 +114,11 @@ const App: React.FC = () => {
           <GroupDetail 
             group={selectedGroup} 
             onBack={() => handleNavigate('GROUPS')} 
-            onUpdateGroup={handleUpdateGroup}
+            onUpdateGroup={(updated) => {
+              const newGroups = data.groups.map(g => g.id === updated.id ? updated : g);
+              updateData({ groups: newGroups });
+              setSelectedGroup(updated);
+            }}
           />
         ) : null;
       case 'SMS_PARSER':
@@ -105,13 +138,19 @@ const App: React.FC = () => {
           emis={data.emis} 
           onUpdate={(emis) => updateData({ emis })} 
         />;
+      case 'PROFILE':
+        return <ProfileScreen 
+          user={user} 
+          onUpdate={handleUpdateUser} 
+          onBack={() => handleNavigate('SETTINGS')} 
+        />;
       case 'SETTINGS':
         return <SettingsScreen 
           data={data} 
           user={user} 
           onLogout={handleLogout} 
-          onDataReset={() => setData(loadData())}
-          onUpdateBranding={handleUpdateBranding}
+          onDataReset={() => { localStorage.clear(); window.location.reload(); }}
+          onUpdateBranding={(b) => updateData({ branding: b })}
         />;
       default:
         return <Dashboard data={data} onNavigate={handleNavigate} branding={data.branding} />;

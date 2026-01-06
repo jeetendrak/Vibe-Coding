@@ -5,6 +5,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   avatar?: string;
 }
 
@@ -26,8 +27,8 @@ export interface Transaction {
 export interface GroupMember {
   id: string;
   name: string;
-  contact: string; // Phone or Email
-  isUser: boolean; // True if this represents the app owner
+  contact: string;
+  isUser: boolean;
 }
 
 export interface GroupTransaction {
@@ -35,8 +36,8 @@ export interface GroupTransaction {
   groupId: string;
   description: string;
   amount: number;
-  paidById: string; // ID of the GroupMember who paid
-  splitBetweenIds: string[]; // IDs of members involved in the split
+  paidById: string;
+  splitBetweenIds: string[];
   date: string;
   category: string;
 }
@@ -85,4 +86,4 @@ export interface Investment {
   lastUpdated: string;
 }
 
-export type AppScreen = 'AUTH' | 'DASHBOARD' | 'TRANSACTIONS' | 'SMS_PARSER' | 'EMI' | 'BUDGETS' | 'GOALS' | 'INVESTMENTS' | 'SETTINGS' | 'GROUPS' | 'GROUP_DETAIL';
+export type AppScreen = 'AUTH' | 'DASHBOARD' | 'TRANSACTIONS' | 'SMS_PARSER' | 'EMI' | 'BUDGETS' | 'GOALS' | 'INVESTMENTS' | 'SETTINGS' | 'GROUPS' | 'GROUP_DETAIL' | 'PROFILE';
