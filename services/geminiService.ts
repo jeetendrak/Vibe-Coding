@@ -1,8 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-
 export interface ParsedSMS {
   type: 'debit' | 'credit';
   amount: number;
@@ -14,6 +12,10 @@ export interface ParsedSMS {
 
 export const parseSMSWithGemini = async (smsText: string): Promise<ParsedSMS | null> => {
   try {
+    // Instantiate right before usage as per best practices and to ensure the most up-to-date API key is used
+    // Directly use process.env.API_KEY as per SDK initialization guidelines
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Parse this Indian bank/UPI SMS and extract transaction details. SMS: "${smsText}"`,
@@ -34,6 +36,7 @@ export const parseSMSWithGemini = async (smsText: string): Promise<ParsedSMS | n
       }
     });
 
+    // The .text property is a getter that returns the generated text directly
     const jsonStr = response.text?.trim();
     if (jsonStr) {
       return JSON.parse(jsonStr) as ParsedSMS;
