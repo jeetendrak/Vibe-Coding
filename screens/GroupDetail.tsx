@@ -8,7 +8,9 @@ import {
   CreditCard,
   UserPlus,
   Edit2,
-  Trash2
+  Trash2,
+  UserMinus,
+  AlertTriangle
 } from 'lucide-react';
 import { Group, GroupMember, GroupTransaction } from '../types';
 
@@ -23,6 +25,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack, onUpdateGroup 
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [isAddingMember, setIsAddingMember] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
 
   // Form State
   const [desc, setDesc] = useState('');
@@ -97,6 +100,37 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack, onUpdateGroup 
     setMemContact('');
   };
 
+  const handleRemoveMember = () => {
+    if (!memberToRemove) return;
+    
+    // Check if member has transactions where they paid or are part of split
+    const hasTransactions = group.transactions.some(t => 
+      t.paidById === memberToRemove.id || t.splitBetweenIds.includes(memberToRemove.id)
+    );
+
+    const bal = memberBalances[memberToRemove.id] || 0;
+    const isSettled = Math.abs(bal) < 0.01;
+
+    if (!isSettled) {
+      alert(`Cannot remove ${memberToRemove.name}. They have an unsettled balance of ₹${bal.toFixed(2)}. Please settle up first.`);
+      setMemberToRemove(null);
+      return;
+    }
+
+    if (hasTransactions) {
+      if (!confirm(`${memberToRemove.name} has past transaction history in this group. Removing them will keep existing records but mark them as a deleted member. Continue?`)) {
+        setMemberToRemove(null);
+        return;
+      }
+    }
+
+    onUpdateGroup({
+      ...group,
+      members: group.members.filter(m => m.id !== memberToRemove.id)
+    });
+    setMemberToRemove(null);
+  };
+
   const calculateMemberBalances = () => {
     const balances: Record<string, number> = {};
     group.members.forEach(m => balances[m.id] = 0);
@@ -114,7 +148,6 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack, onUpdateGroup 
   const memberBalances = calculateMemberBalances();
 
   const shareGroup = () => {
-    // Correct link structure using origin
     const origin = window.location.origin;
     const link = `${origin}/?joinGroup=${group.inviteCode}`;
     
@@ -206,13 +239,23 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack, onUpdateGroup 
             {group.members.map(member => {
               const bal = memberBalances[member.id] || 0;
               return (
-                <div key={member.id} className="bg-white p-4 rounded-3xl border border-slate-100 flex items-center justify-between">
+                <div key={member.id} className="bg-white p-4 rounded-3xl border border-slate-100 flex items-center justify-between group/member">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm ${member.isUser ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-slate-100 text-slate-500'}`}>
                       {member.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-bold text-slate-800 text-sm">{member.name} {member.isUser && '(You)'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-slate-800 text-sm">{member.name} {member.isUser && '(You)'}</p>
+                        {!member.isUser && (
+                          <button 
+                            onClick={() => setMemberToRemove(member)}
+                            className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover/member:opacity-100"
+                          >
+                            <UserMinus size={14} />
+                          </button>
+                        )}
+                      </div>
                       <p className="text-[9px] text-slate-400">{member.contact || 'No contact info'}</p>
                     </div>
                   </div>
@@ -358,6 +401,35 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack, onUpdateGroup 
             <div className="flex gap-4 pt-4">
               <button onClick={() => setIsAddingMember(false)} className="flex-1 py-4 text-slate-400 font-bold">Cancel</button>
               <button onClick={handleAddMember} className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">Add</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Member Deletion Confirmation Modal */}
+      {memberToRemove && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[220] flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-sm rounded-[40px] p-8 text-center space-y-4 animate-scaleIn">
+            <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full mx-auto flex items-center justify-center mb-2">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Remove Member?</h3>
+            <p className="text-slate-500 text-sm">
+              Are you sure you want to remove <span className="font-bold text-slate-800">{memberToRemove.name}</span> from this group?
+            </p>
+            <div className="flex gap-4 pt-4">
+              <button 
+                onClick={() => setMemberToRemove(null)} 
+                className="flex-1 py-4 text-slate-400 font-bold"
+              >
+                Keep
+              </button>
+              <button 
+                onClick={handleRemoveMember} 
+                className="flex-1 bg-rose-500 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform"
+              >
+                Remove
+              </button>
             </div>
           </div>
         </div>

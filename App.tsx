@@ -43,7 +43,8 @@ const App: React.FC = () => {
             ...groupToJoin,
             members: [...groupToJoin.members, { id: user.id, name: user.name, contact: user.email, isUser: true }]
           };
-          updateData({ groups: data.groups.map(g => g.id === groupToJoin.id ? updatedGroup : g) });
+          const newGroups = data.groups.map(g => g.id === groupToJoin.id ? updatedGroup : g);
+          updateData({ groups: newGroups });
           setSelectedGroup(updatedGroup);
           setActiveScreen('GROUP_DETAIL');
           alert(`Successfully joined ${groupToJoin.name}!`);
@@ -90,6 +91,13 @@ const App: React.FC = () => {
     setAuthUser(updatedUser);
   };
 
+  const handleFactoryReset = () => {
+    if (window.confirm("WARNING: This will permanently delete ALL data, transactions, and settings. Are you absolutely sure?")) {
+      localStorage.clear();
+      window.location.href = window.location.origin + window.location.pathname; // Hard reload
+    }
+  };
+
   if (!user) {
     return <Auth onLogin={handleLogin} branding={data.branding} />;
   }
@@ -97,7 +105,7 @@ const App: React.FC = () => {
   const renderScreen = () => {
     switch (activeScreen) {
       case 'DASHBOARD':
-        return <Dashboard data={data} onNavigate={handleNavigate} branding={data.branding} />;
+        return <Dashboard data={data} onNavigate={handleNavigate} />;
       case 'TRANSACTIONS':
         return <TransactionsScreen 
           transactions={data.transactions} 
@@ -149,11 +157,11 @@ const App: React.FC = () => {
           data={data} 
           user={user} 
           onLogout={handleLogout} 
-          onDataReset={() => { localStorage.clear(); window.location.reload(); }}
+          onDataReset={handleFactoryReset}
           onUpdateBranding={(b) => updateData({ branding: b })}
         />;
       default:
-        return <Dashboard data={data} onNavigate={handleNavigate} branding={data.branding} />;
+        return <Dashboard data={data} onNavigate={handleNavigate} />;
     }
   };
 

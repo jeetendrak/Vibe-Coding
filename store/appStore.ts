@@ -15,24 +15,11 @@ interface AppData {
 }
 
 const DEFAULT_DATA: AppData = {
-  transactions: [
-    { id: '1', amount: 50000, category: 'Salary', type: 'INCOME', note: 'Monthly Salary', date: new Date().toISOString() },
-    { id: '2', amount: 1500, category: 'Food', type: 'EXPENSE', note: 'Dinner at Taj', date: new Date().toISOString() },
-  ],
-  emis: [
-    { id: '1', loanName: 'Home Loan', amount: 25000, interestRate: 8.5, tenureMonths: 240, startDate: '2022-01-01', paidMonths: 26 }
-  ],
-  budgets: [
-    { id: '1', category: 'Food', limit: 8000, spent: 1500 },
-    { id: '2', category: 'Shopping', limit: 5000, spent: 0 },
-    { id: '3', category: 'Travel', limit: 4000, spent: 200 }
-  ],
-  goals: [
-    { id: '1', name: 'New Car', targetAmount: 800000, currentAmount: 150000, deadline: '2026-12-31' }
-  ],
-  investments: [
-    { id: '1', type: 'MUTUAL_FUND', name: 'Quant Small Cap', investedAmount: 50000, currentValue: 62000, lastUpdated: new Date().toISOString() }
-  ],
+  transactions: [],
+  emis: [],
+  budgets: [],
+  goals: [],
+  investments: [],
   groups: [],
   branding: {
     name: 'SmartFin',
@@ -43,9 +30,22 @@ const DEFAULT_DATA: AppData = {
 export const loadData = (): AppData => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) return DEFAULT_DATA;
-  const parsed = JSON.parse(stored);
-  // Ensure default structure for new fields
-  return { ...DEFAULT_DATA, ...parsed, branding: parsed.branding || DEFAULT_DATA.branding };
+  try {
+    const parsed = JSON.parse(stored);
+    return {
+      ...DEFAULT_DATA,
+      ...parsed,
+      branding: parsed.branding || DEFAULT_DATA.branding,
+      transactions: parsed.transactions || [],
+      emis: parsed.emis || [],
+      budgets: parsed.budgets || [],
+      goals: parsed.goals || [],
+      investments: parsed.investments || [],
+      groups: parsed.groups || []
+    };
+  } catch (e) {
+    return DEFAULT_DATA;
+  }
 };
 
 export const saveData = (data: AppData) => {
@@ -54,7 +54,12 @@ export const saveData = (data: AppData) => {
 
 export const getAuthUser = (): User | null => {
   const auth = localStorage.getItem(AUTH_KEY);
-  return auth ? JSON.parse(auth) : null;
+  if (!auth) return null;
+  try {
+    return JSON.parse(auth);
+  } catch {
+    return null;
+  }
 };
 
 export const setAuthUser = (user: User | null) => {
@@ -78,7 +83,7 @@ export const exportData = () => {
 export const importData = (jsonString: string): boolean => {
   try {
     const parsed = JSON.parse(jsonString);
-    if (parsed.transactions && parsed.emis && parsed.budgets) {
+    if (parsed.branding) { // Basic validation
       saveData(parsed);
       return true;
     }
