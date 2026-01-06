@@ -66,7 +66,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, use
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 pt-safe">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               {branding.logoUrl ? <img src={branding.logoUrl} className="w-full h-full object-cover rounded-lg" /> : <TrendingUp className="text-white w-5 h-5" />}
@@ -93,7 +93,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, use
           ))}
         </div>
 
-        <div className="absolute bottom-8 left-6 right-6 pt-6 border-t border-slate-100">
+        <div className="absolute bottom-8 left-6 right-6 pt-6 border-t border-slate-100 pb-safe">
           <button 
             onClick={() => window.location.reload()}
             className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl font-bold text-sm text-rose-500 hover:bg-rose-50 transition-colors"
@@ -105,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, use
       </aside>
 
       {/* Header */}
-      <header className="px-6 py-4 bg-white border-b border-slate-100 flex justify-between items-center shrink-0 z-50">
+      <header className="px-6 py-4 bg-white border-b border-slate-100 flex justify-between items-center shrink-0 z-50 pt-safe">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsSidebarOpen(true)}
@@ -140,22 +140,22 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, use
       </header>
 
       {/* Content Area */}
-      <main className="flex-1 overflow-y-auto pb-24">
+      <main className="flex-1 overflow-y-auto pb-32">
         {children}
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around items-center py-3 px-2 z-50">
+      <nav className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 flex justify-around items-center py-4 px-2 z-[60] pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            className={`flex flex-col items-center gap-1 transition-all ${
-              (activeScreen === item.id || (activeScreen === 'GROUP_DETAIL' && item.id === 'GROUPS')) ? 'text-indigo-600 scale-110' : 'text-slate-400'
+            className={`flex flex-col items-center gap-1.5 transition-all flex-1 ${
+              (activeScreen === item.id || (activeScreen === 'GROUP_DETAIL' && item.id === 'GROUPS')) ? 'text-indigo-600 scale-105' : 'text-slate-400'
             }`}
           >
             <item.icon size={22} strokeWidth={(activeScreen === item.id) ? 2.5 : 2} />
-            <span className="text-[10px] font-medium">{item.label}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
           </button>
         ))}
       </nav>

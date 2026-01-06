@@ -11,7 +11,7 @@ import SettingsScreen from './screens/Settings';
 import GroupsScreen from './screens/Groups';
 import GroupDetail from './screens/GroupDetail';
 import ProfileScreen from './screens/Profile';
-import { AppScreen, Group, User, Branding } from './types';
+import { AppScreen, Group, User, Branding, Transaction } from './types';
 import { loadData, saveData, getAuthUser, setAuthUser } from './store/appStore';
 
 const App: React.FC = () => {
@@ -106,7 +106,11 @@ const App: React.FC = () => {
   const renderScreen = () => {
     switch (activeScreen) {
       case 'DASHBOARD':
-        return <Dashboard data={data} onNavigate={handleNavigate} />;
+        return <Dashboard 
+          data={data} 
+          onNavigate={handleNavigate} 
+          onUpdateTransactions={(t) => updateData({ transactions: t })}
+        />;
       case 'TRANSACTIONS':
         return <TransactionsScreen 
           transactions={data.transactions} 
@@ -162,7 +166,11 @@ const App: React.FC = () => {
           onUpdateBranding={(b) => updateData({ branding: b })}
         />;
       default:
-        return <Dashboard data={data} onNavigate={handleNavigate} />;
+        return <Dashboard 
+          data={data} 
+          onNavigate={handleNavigate} 
+          onUpdateTransactions={(t) => updateData({ transactions: t })}
+        />;
     }
   };
 

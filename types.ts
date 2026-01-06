@@ -18,6 +18,7 @@ export interface Transaction {
   id: string;
   amount: number;
   category: string;
+  subCategory?: string;
   type: TransactionType;
   note: string;
   date: string;
