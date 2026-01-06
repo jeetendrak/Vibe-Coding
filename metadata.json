@@ -1,0 +1,7 @@
+{
+  "name": "SmartFin – Personal Finance & Budgeting",
+  "description": "A comprehensive financial management application with AI-powered SMS parsing, expense tracking, EMI management, and goal planning. Optimized for a seamless mobile-web experience.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
