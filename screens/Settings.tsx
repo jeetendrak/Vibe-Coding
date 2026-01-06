@@ -1,5 +1,4 @@
-
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   Download, 
   Trash2, 
@@ -14,7 +13,8 @@ import {
   Fingerprint, 
   Lock, 
   MessageCircle,
-  Layout as BrandingIcon
+  Layout as BrandingIcon,
+  ArrowLeft
 } from 'lucide-react';
 import { exportData } from '../store/appStore';
 import { User, Branding } from '../types';
@@ -39,6 +39,12 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ data, user, onLogout, o
   const [isBioLockEnabled, setIsBioLockEnabled] = useState(false);
   const [isTxAlerts, setIsTxAlerts] = useState(true);
 
+  // Keep internal state in sync if data.branding changes externally (like after a reset)
+  useEffect(() => {
+    setBrandName(data.branding.name);
+    setBrandLogo(data.branding.logoUrl || '');
+  }, [data.branding]);
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -55,11 +61,11 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ data, user, onLogout, o
   };
 
   const handleResetBranding = () => {
-    if (confirm("Reset branding to defaults?")) {
-      setBrandName('SmartFin');
-      setBrandLogo('');
-      onUpdateBranding({ name: 'SmartFin', logoUrl: '' });
-      alert("Branding reset to defaults.");
+    if (confirm("Restore branding to original SmartFin defaults?")) {
+      const defaultBranding = { name: 'SmartFin', logoUrl: '' };
+      setBrandName(defaultBranding.name);
+      setBrandLogo(defaultBranding.logoUrl);
+      onUpdateBranding(defaultBranding);
       setActiveTab('MAIN');
     }
   };
@@ -68,57 +74,70 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ data, user, onLogout, o
     return (
       <div className="p-6 space-y-6 animate-fadeIn">
         <div className="flex items-center gap-4">
-          <button onClick={() => setActiveTab('MAIN')} className="p-2 -ml-2 text-slate-400">
-            <RotateCcw size={20} />
+          <button onClick={() => setActiveTab('MAIN')} className="p-2 -ml-2 text-slate-400 hover:text-indigo-600 transition-colors">
+            <ArrowLeft size={20} />
           </button>
           <h2 className="text-xl font-bold text-slate-900">App Branding</h2>
         </div>
         
-        <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm space-y-6">
+        <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm space-y-8">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
-              <div className="w-24 h-24 bg-slate-50 border-2 border-slate-100 rounded-[28px] flex items-center justify-center overflow-hidden">
+              <div className="w-24 h-24 bg-slate-50 border-2 border-slate-100 rounded-[28px] flex items-center justify-center overflow-hidden shadow-inner">
                 {brandLogo ? (
                   <img src={brandLogo} className="w-full h-full object-cover" alt="Custom Logo" />
                 ) : (
-                  <ImageIcon size={32} className="text-slate-200" />
+                  <div className="bg-indigo-600 w-full h-full flex items-center justify-center">
+                    <BrandingIcon size={32} className="text-white" />
+                  </div>
                 )}
               </div>
               <button 
                 onClick={() => logoInputRef.current?.click()}
-                className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform ring-4 ring-white"
               >
                 <ImageIcon size={18} />
               </button>
               <input type="file" ref={logoInputRef} onChange={handleLogoUpload} className="hidden" accept="image/*" />
             </div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">App Icon</p>
+            <div className="text-center">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Icon Preview</p>
+              <p className="text-[9px] text-slate-300 mt-1 italic">Click the icon to upload</p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-400 uppercase ml-2">App Name</label>
-            <input 
-              value={brandName} 
-              onChange={(e) => setBrandName(e.target.value)} 
-              placeholder="e.g. MyExpenseTracker"
-              className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-5 font-bold text-slate-800 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all"
-            />
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">App Name</label>
+              <input 
+                value={brandName} 
+                onChange={(e) => setBrandName(e.target.value)} 
+                placeholder="e.g. My Expense Tracker"
+                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-5 font-bold text-slate-800 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm"
+              />
+            </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <button 
-              onClick={handleResetBranding} 
-              className="flex-1 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition-colors"
-            >
-              Reset
-            </button>
+          <div className="flex flex-col gap-3 pt-4">
             <button 
               onClick={handleSaveBranding} 
-              className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
-              <Save size={18} /> Save
+              <Save size={18} /> Apply Changes
+            </button>
+            <button 
+              onClick={handleResetBranding} 
+              className="w-full py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 rounded-2xl transition-colors border border-transparent hover:border-slate-100"
+            >
+              Restore Defaults
             </button>
           </div>
+        </div>
+        
+        <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100">
+           <p className="text-[11px] text-amber-700 font-bold leading-relaxed">
+             Custom branding is stored locally. If you switch devices or clear app data, it will revert to "SmartFin" defaults.
+           </p>
         </div>
       </div>
     );
@@ -128,8 +147,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ data, user, onLogout, o
     return (
       <div className="p-6 space-y-6 animate-fadeIn">
         <div className="flex items-center gap-4">
-          <button onClick={() => setActiveTab('MAIN')} className="p-2 -ml-2 text-slate-400">
-            <RotateCcw size={20} />
+          <button onClick={() => setActiveTab('MAIN')} className="p-2 -ml-2 text-slate-400 hover:text-indigo-600 transition-colors">
+            <ArrowLeft size={20} />
           </button>
           <h2 className="text-xl font-bold text-slate-900">Privacy & Security</h2>
         </div>
@@ -168,8 +187,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ data, user, onLogout, o
     return (
       <div className="p-6 space-y-6 animate-fadeIn">
         <div className="flex items-center gap-4">
-          <button onClick={() => setActiveTab('MAIN')} className="p-2 -ml-2 text-slate-400">
-            <RotateCcw size={20} />
+          <button onClick={() => setActiveTab('MAIN')} className="p-2 -ml-2 text-slate-400 hover:text-indigo-600 transition-colors">
+            <ArrowLeft size={20} />
           </button>
           <h2 className="text-xl font-bold text-slate-900">Notifications</h2>
         </div>
@@ -267,7 +286,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ data, user, onLogout, o
         </div>
       </div>
 
-      <p className="text-center text-slate-300 text-[10px] font-bold pb-10 uppercase tracking-widest">Version 2.0.0 • Professional Build</p>
+      <p className="text-center text-slate-300 text-[10px] font-bold pb-10 uppercase tracking-widest">Version 2.0.0 • Local Vault Build</p>
     </div>
   );
 };
